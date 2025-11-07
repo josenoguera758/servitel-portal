@@ -432,8 +432,8 @@
 	<script>
 		// Configuración
 		const CONFIG = {
-			webhookNonClient: 'https://test.com',
-			webhookClient: 'https://n8n.telecom.com.ve/webhook/servitel-zona-wifi',
+			webhookNonClient: 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi',
+			webhookClient: 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi',
 			// Para Omada Cloud, déjalo vacío. La redirección automática funciona
 			omadaAuthUrl: ''
 		};
@@ -477,38 +477,27 @@
 		// Autorizar en Omada
 		async function authorizeOmada(username) {
 			try {
-				// Método 1: POST directo al controlador Omada
-				const authData = {
-					username: username,
-					mac: urlParams.mac,
-					ap: urlParams.ap,
-					ssid: urlParams.ssid,
-					token: urlParams.token
-				};
+				console.log('🔐 Intentando autorizar:', username);
+				console.log('📍 URL de redirección:', urlParams.url);
 
-				// Si tienes la URL de autorización del controlador
-				if (CONFIG.omadaAuthUrl && CONFIG.omadaAuthUrl !== 'YOUR_OMADA_CONTROLLER_URL/guest/authorize') {
-					const response = await fetch(CONFIG.omadaAuthUrl, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify(authData)
-					});
-
-					if (response.ok) {
-						return true;
-					}
+				// Si no viene desde Omada (prueba directa), simular éxito
+				if (!urlParams.isFromOmada) {
+					console.log('✅ Modo prueba - simulando autorización exitosa');
+					alert('✅ Formulario validado correctamente.\n\n⚠️ Nota: Conéctate al WiFi para autorización real.');
+					return true;
 				}
 
-				// Método 2: Redirección simple (funciona en la mayoría de casos)
-				// Omada generalmente acepta la autorización mediante callback URL
+				// Método de redirección (el más común con Omada Cloud)
 				if (urlParams.url) {
+					console.log('↗️ Redirigiendo a Omada Cloud...');
 					window.location.href = urlParams.url;
 					return true;
 				}
 
+				console.error('❌ No se encontró URL de autorización');
 				return false;
 			} catch (error) {
-				console.error('Error al autorizar en Omada:', error);
+				console.error('❌ Error al autorizar en Omada:', error);
 				return false;
 			}
 		}
@@ -543,6 +532,8 @@
 			loadingEl.style.display = 'block';
 
 			try {
+				console.log('📤 Enviando validación al webhook...');
+				
 				const response = await fetch(CONFIG.webhookClient, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -554,7 +545,17 @@
 					})
 				});
 
-				const data = await response.json();
+				console.log('📥 Respuesta recibida:', response.status);
+				
+				let data;
+				try {
+					data = await response.json();
+					console.log('📊 Datos:', data);
+				} catch (e) {
+					console.warn('⚠️ Respuesta no es JSON válido');
+					data = { success: response.ok };
+				}
+
 				loadingEl.style.display = 'none';
 
 				if (data === true || data.success === true || data.valid === true) {
@@ -564,16 +565,11 @@
 					// Autorizar en Omada
 					setTimeout(async () => {
 						const authorized = await authorizeOmada('client-' + cedula);
-						if (!authorized) {
-							// Fallback: intentar redirección directa
-							if (urlParams.url) {
-								window.location.href = urlParams.url;
-							} else {
-								errorEl.textContent = 'Error al conectar. Por favor contacte a soporte.';
-								errorEl.style.display = 'block';
-								successEl.style.display = 'none';
-								validateBtn.disabled = false;
-							}
+						if (!authorized && urlParams.isFromOmada) {
+							errorEl.textContent = 'Error al conectar. Por favor contacte a soporte.';
+							errorEl.style.display = 'block';
+							successEl.style.display = 'none';
+							validateBtn.disabled = false;
 						}
 					}, 1500);
 				} else {
@@ -582,9 +578,18 @@
 					validateBtn.disabled = false;
 				}
 			} catch (err) {
-				console.error('Error al validar cliente:', err);
+				console.error('❌ Error completo:', err);
 				loadingEl.style.display = 'none';
-				errorEl.textContent = 'Error al conectar con el servidor. Por favor intente nuevamente.';
+				
+				// Mensaje más específico según el error
+				let errorMessage = 'Error al conectar con el servidor. ';
+				if (err.message.includes('Failed to fetch')) {
+					errorMessage += 'Verifique su conexión a Internet o que el webhook esté accesible.';
+				} else {
+					errorMessage += 'Por favor intente nuevamente.';
+				}
+				
+				errorEl.textContent = errorMessage;
 				errorEl.style.display = 'block';
 				validateBtn.disabled = false;
 			}
@@ -644,31 +649,30 @@
 			};
 
 			try {
+				console.log('📤 Enviando datos de no cliente...');
 				await fetch(CONFIG.webhookNonClient, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(person)
 				});
+				console.log('✅ Datos enviados correctamente');
 			} catch (err) {
-				console.error('Error al enviar datos al webhook:', err);
+				console.error('⚠️ Error al enviar datos al webhook:', err);
 			}
 
 			// Autorizar en Omada
 			const authorized = await authorizeOmada('guest-' + emailEl.value.trim());
-			if (!authorized) {
-				// Fallback: intentar redirección directa
-				if (urlParams.url) {
-					window.location.href = urlParams.url;
-				} else {
-					alert('Error al conectar. Por favor contacte a soporte.');
-					submitBtn.disabled = false;
-					submitBtn.textContent = 'Ingresar';
-				}
+			if (!authorized && urlParams.isFromOmada) {
+				alert('Error al conectar. Por favor contacte a soporte.');
+				submitBtn.disabled = false;
+				submitBtn.textContent = 'Ingresar';
 			}
 		}
 
 		// Debug: mostrar parámetros en consola
-		console.log('Parámetros recibidos de Omada:', urlParams);
+		console.log('🌐 Portal Servitel WiFi');
+		console.log('📋 Parámetros recibidos de Omada:', urlParams);
+		console.log('🔗 Webhooks configurados:', CONFIG);
 	</script>
 </body>
 

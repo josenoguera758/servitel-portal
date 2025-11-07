@@ -368,7 +368,9 @@
 
 	<script>
 		// Configuración
-		const WEBHOOK_URL = 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi';
+		// Usamos un proxy CORS para evitar problemas de certificado
+		const WEBHOOK_URL_ORIGINAL = 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi';
+		const WEBHOOK_URL = 'https://corsproxy.io/?' + encodeURIComponent(WEBHOOK_URL_ORIGINAL);
 
 		// Obtener parámetros de Omada desde la URL
 		const urlParams = new URLSearchParams(window.location.search);

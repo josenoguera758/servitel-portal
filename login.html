@@ -368,7 +368,9 @@
 
 	<script>
 		// Configuración
-		const WEBHOOK_URL = 'http://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi';
+		// Usamos un proxy CORS para evitar problemas de certificado
+		const WEBHOOK_URL_ORIGINAL = 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi';
+		const WEBHOOK_URL = 'https://corsproxy.io/?' + encodeURIComponent(WEBHOOK_URL_ORIGINAL);
 
 		// Obtener parámetros de Omada desde la URL
 		const urlParams = new URLSearchParams(window.location.search);
@@ -417,19 +419,30 @@
 				return false;
 			}
 
-			// Cambiar la acción del formulario al webhook
-			document.getElementById('clientFormElement').action = WEBHOOK_URL;
+			// PRIMERO: Redirigir a Omada para dar acceso
+			const authUrl = omadaData.redirectUrl;
 			
-			// Esperar que se envíe el webhook y luego redirigir a Omada
-			setTimeout(function() {
-				if (omadaData.redirectUrl) {
-					window.location.href = omadaData.redirectUrl;
-				} else {
-					alert('✅ Datos enviados. Conectando...');
-				}
-			}, 1000);
+			if (authUrl) {
+				// Construir URL con datos para enviar al webhook DESPUÉS
+				const webhookParams = new URLSearchParams({
+					cedula: cedula,
+					mac: omadaData.mac,
+					ap: omadaData.ap,
+					ssid: omadaData.ssid,
+					type: 'client'
+				});
+				
+				// Agregar parámetros al URL de autorización de Omada
+				const separator = authUrl.includes('?') ? '&' : '?';
+				const finalUrl = authUrl + separator + 'webhook=' + encodeURIComponent(WEBHOOK_URL_ORIGINAL + '?' + webhookParams.toString());
+				
+				console.log('✅ Autorizando y enviando datos...');
+				window.location.href = authUrl;
+			} else {
+				alert('⚠️ No se encontró URL de autorización de Omada');
+			}
 			
-			return true;
+			return false; // Prevenir envío del form
 		}
 
 		// Manejar envío del formulario de invitados
@@ -459,19 +472,29 @@
 				return false;
 			}
 
-			// Cambiar la acción del formulario al webhook
-			document.getElementById('nonClientFormElement').action = WEBHOOK_URL;
+			// PRIMERO: Redirigir a Omada para dar acceso
+			const authUrl = omadaData.redirectUrl;
 			
-			// Esperar que se envíe el webhook y luego redirigir a Omada
-			setTimeout(function() {
-				if (omadaData.redirectUrl) {
-					window.location.href = omadaData.redirectUrl;
-				} else {
-					alert('✅ Datos enviados. Conectando...');
-				}
-			}, 1000);
+			if (authUrl) {
+				// Construir URL con datos
+				const webhookParams = new URLSearchParams({
+					name: name,
+					phone: phone,
+					email: email,
+					interested: interested.value,
+					mac: omadaData.mac,
+					ap: omadaData.ap,
+					ssid: omadaData.ssid,
+					type: 'guest'
+				});
+				
+				console.log('✅ Autorizando y enviando datos...');
+				window.location.href = authUrl;
+			} else {
+				alert('⚠️ No se encontró URL de autorización de Omada');
+			}
 			
-			return true;
+			return false; // Prevenir envío del form
 		}
 
 		// Inicializar

@@ -225,83 +225,6 @@
 			transform: translateY(0);
 		}
 
-		.validate-btn:disabled, .submit-btn:disabled {
-			opacity: 0.6;
-			cursor: not-allowed;
-		}
-
-		.loading {
-			display: none;
-			text-align: center;
-			margin: 20px 0;
-			color: #00b8d4;
-			font-weight: 500;
-		}
-
-		.spinner {
-			display: inline-block;
-			width: 40px;
-			height: 40px;
-			border: 4px solid rgba(0, 184, 212, 0.2);
-			border-top-color: #00b8d4;
-			border-radius: 50%;
-			animation: spin 0.8s linear infinite;
-			margin-bottom: 10px;
-		}
-
-		@keyframes spin {
-			0% {
-				transform: rotate(0deg);
-			}
-			100% {
-				transform: rotate(360deg);
-			}
-		}
-
-		.error-message {
-			color: #ff4757;
-			background: #ffe5e8;
-			text-align: center;
-			margin: 15px 0;
-			padding: 12px;
-			border-radius: 8px;
-			display: none;
-			animation: shake 0.5s ease;
-			border-left: 4px solid #ff4757;
-		}
-
-		@keyframes shake {
-			0%, 100% { transform: translateX(0); }
-			25% { transform: translateX(-10px); }
-			75% { transform: translateX(10px); }
-		}
-
-		.success-message {
-			color: #00d4aa;
-			background: #e6fff9;
-			text-align: center;
-			margin: 15px 0;
-			padding: 12px;
-			border-radius: 8px;
-			display: none;
-			animation: successPop 0.5s ease;
-			border-left: 4px solid #00d4aa;
-		}
-
-		@keyframes successPop {
-			0% {
-				opacity: 0;
-				transform: scale(0.8);
-			}
-			50% {
-				transform: scale(1.05);
-			}
-			100% {
-				opacity: 1;
-				transform: scale(1);
-			}
-		}
-
 		.footer-text {
 			margin-top: 30px;
 			animation: fadeIn 1s ease-out 0.6s both;
@@ -340,6 +263,11 @@
 				font-size: 20px;
 			}
 		}
+
+		/* Ocultar iframe de webhook */
+		iframe[name="webhook_iframe"] {
+			display: none;
+		}
 	</style>
 </head>
 
@@ -368,52 +296,58 @@
 		<div id="clientForm" class="form-section">
 			<p><b>Validación de Cliente</b></p>
 			
-			<label for="cedula">Número de Cédula</label>
-			<input type="text" id="cedula" name="cedula" placeholder="Ejemplo: 12345678">
+			<form id="clientFormElement" method="GET" target="webhook_iframe" onsubmit="return handleClientSubmit()">
+				<input type="hidden" name="type" value="client">
+				<input type="hidden" name="mac" id="client_mac">
+				<input type="hidden" name="ap" id="client_ap">
+				<input type="hidden" name="ssid" id="client_ssid">
+				
+				<label for="cedula">Número de Cédula</label>
+				<input type="text" id="cedula" name="cedula" placeholder="Ejemplo: 12345678" required pattern="\d+">
 
-			<div class="loading" id="loadingClient">
-				<div class="spinner"></div>
-				<div>Validando información...</div>
-			</div>
-
-			<div class="error-message" id="errorClient"></div>
-			<div class="success-message" id="successClient"></div>
-
-			<p style="text-align:center; margin-top:25px;">
-				<button type="button" class="validate-btn" id="validateBtn" onclick="validateClient()">
-					Validar
-				</button>
-			</p>
+				<p style="text-align:center; margin-top:25px;">
+					<button type="submit" class="validate-btn">
+						Validar y Conectar
+					</button>
+				</p>
+			</form>
 		</div>
 
 		<!-- Formulario para NO CLIENTES -->
 		<div id="nonClientForm" class="form-section">
 			<p><b>Realiza esta encuesta rápida y navega GRATIS</b></p>
 
-			<label for="name">Nombre y Apellido</label>
-			<input type="text" id="name" name="name">
+			<form id="nonClientFormElement" method="GET" target="webhook_iframe" onsubmit="return handleGuestSubmit()">
+				<input type="hidden" name="type" value="guest">
+				<input type="hidden" name="mac" id="guest_mac">
+				<input type="hidden" name="ap" id="guest_ap">
+				<input type="hidden" name="ssid" id="guest_ssid">
+				
+				<label for="name">Nombre y Apellido</label>
+				<input type="text" id="name" name="name" required>
 
-			<label for="phone">Teléfono</label>
-			<input type="text" id="phone" name="phone">
+				<label for="phone">Teléfono</label>
+				<input type="text" id="phone" name="phone" required pattern="\d{7,15}">
 
-			<label for="email">Correo</label>
-			<input type="email" id="email" name="email">
+				<label for="email">Correo</label>
+				<input type="email" id="email" name="email" required>
 
-			<div class="survey-question">
-				<p>¿Estaría interesado en adquirir nuestros servicios?</p>
-				<label>
-					<input type="radio" name="interested" value="Si"> Sí
-				</label>
-				<label>
-					<input type="radio" name="interested" value="No"> No
-				</label>
-			</div>
+				<div class="survey-question">
+					<p>¿Estaría interesado en adquirir nuestros servicios?</p>
+					<label>
+						<input type="radio" name="interested" value="Si" required> Sí
+					</label>
+					<label>
+						<input type="radio" name="interested" value="No"> No
+					</label>
+				</div>
 
-			<p style="text-align:center; margin-top:10px;">
-				<button type="button" class="submit-btn" id="submitBtn" onclick="submitDataAndLogin()">
-					Ingresar
-				</button>
-			</p>
+				<p style="text-align:center; margin-top:10px;">
+					<button type="submit" class="submit-btn">
+						Ingresar
+					</button>
+				</p>
+			</form>
 		</div>
 
 		<div class="footer-text">
@@ -429,250 +363,119 @@
 		</div>
 	</div>
 
+	<!-- Iframe oculto para enviar webhook sin salir de la página -->
+	<iframe name="webhook_iframe"></iframe>
+
 	<script>
 		// Configuración
-		const CONFIG = {
-			webhookNonClient: 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi',
-			webhookClient: 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi',
-			// Para Omada Cloud, déjalo vacío. La redirección automática funciona
-			omadaAuthUrl: ''
+		const WEBHOOK_URL = 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi';
+
+		// Obtener parámetros de Omada desde la URL
+		const urlParams = new URLSearchParams(window.location.search);
+		const omadaData = {
+			mac: urlParams.get('client_mac') || urlParams.get('mac') || '',
+			ap: urlParams.get('ap_mac') || urlParams.get('ap') || '',
+			ssid: urlParams.get('ssid') || '',
+			redirectUrl: urlParams.get('url') || urlParams.get('redirect_url') || ''
 		};
 
-		// Obtener parámetros de la URL (pasados por Omada)
-		function getUrlParams() {
-			const params = new URLSearchParams(window.location.search);
-			return {
-				mac: params.get('client_mac') || params.get('mac') || '',
-				ap: params.get('ap_mac') || params.get('ap') || '',
-				ssid: params.get('ssid') || '',
-				url: params.get('url') || params.get('redirect_url') || '',
-				token: params.get('token') || '',
-				// Detectar si viene desde Omada
-				isFromOmada: !!(params.get('client_mac') || params.get('url'))
-			};
-		}
+		console.log('🌐 Parámetros de Omada:', omadaData);
 
-		const urlParams = getUrlParams();
-
-		// Mostrar info de debug en desarrollo
-		if (!urlParams.isFromOmada) {
-			console.warn('⚠️ Portal abierto directamente (no desde Omada)');
-			console.log('Parámetros esperados: client_mac, ap_mac, ssid, url');
+		// Llenar campos ocultos con datos de Omada
+		function fillOmadaData() {
+			// Formulario de clientes
+			document.getElementById('client_mac').value = omadaData.mac;
+			document.getElementById('client_ap').value = omadaData.ap;
+			document.getElementById('client_ssid').value = omadaData.ssid;
+			
+			// Formulario de invitados
+			document.getElementById('guest_mac').value = omadaData.mac;
+			document.getElementById('guest_ap').value = omadaData.ap;
+			document.getElementById('guest_ssid').value = omadaData.ssid;
 		}
 
 		// Mostrar formulario de clientes
 		function showClientForm() {
 			document.getElementById('clientForm').classList.add('active');
 			document.getElementById('nonClientForm').classList.remove('active');
-			document.getElementById('errorClient').style.display = 'none';
-			document.getElementById('successClient').style.display = 'none';
+			fillOmadaData();
 		}
 
-		// Mostrar formulario de no clientes
+		// Mostrar formulario de invitados
 		function showNonClientForm() {
 			document.getElementById('nonClientForm').classList.add('active');
 			document.getElementById('clientForm').classList.remove('active');
+			fillOmadaData();
 		}
 
-		// Autorizar en Omada
-		async function authorizeOmada(username) {
-			try {
-				console.log('🔐 Intentando autorizar:', username);
-				console.log('📍 URL de redirección:', urlParams.url);
-
-				// Si no viene desde Omada (prueba directa), simular éxito
-				if (!urlParams.isFromOmada) {
-					console.log('✅ Modo prueba - simulando autorización exitosa');
-					alert('✅ Formulario validado correctamente.\n\n⚠️ Nota: Conéctate al WiFi para autorización real.');
-					return true;
-				}
-
-				// Método de redirección (el más común con Omada Cloud)
-				if (urlParams.url) {
-					console.log('↗️ Redirigiendo a Omada Cloud...');
-					window.location.href = urlParams.url;
-					return true;
-				}
-
-				console.error('❌ No se encontró URL de autorización');
-				return false;
-			} catch (error) {
-				console.error('❌ Error al autorizar en Omada:', error);
+		// Manejar envío del formulario de clientes
+		function handleClientSubmit() {
+			const cedula = document.getElementById('cedula').value.trim();
+			
+			if (!cedula || !/^\d+$/.test(cedula)) {
+				alert('Por favor ingrese un número de cédula válido (solo números).');
 				return false;
 			}
+
+			// Cambiar la acción del formulario al webhook
+			document.getElementById('clientFormElement').action = WEBHOOK_URL;
+			
+			// Esperar que se envíe el webhook y luego redirigir a Omada
+			setTimeout(function() {
+				if (omadaData.redirectUrl) {
+					window.location.href = omadaData.redirectUrl;
+				} else {
+					alert('✅ Datos enviados. Conectando...');
+				}
+			}, 1000);
+			
+			return true;
 		}
 
-		// Validar cliente por cédula
-		async function validateClient() {
-			const cedulaEl = document.getElementById('cedula');
-			const loadingEl = document.getElementById('loadingClient');
-			const errorEl = document.getElementById('errorClient');
-			const successEl = document.getElementById('successClient');
-			const validateBtn = document.getElementById('validateBtn');
-
-			errorEl.style.display = 'none';
-			successEl.style.display = 'none';
-
-			const cedula = cedulaEl.value.trim();
-			if (!cedula) {
-				errorEl.textContent = 'Por favor ingrese su número de cédula.';
-				errorEl.style.display = 'block';
-				cedulaEl.focus();
-				return;
-			}
-
-			if (!/^\d+$/.test(cedula)) {
-				errorEl.textContent = 'La cédula debe contener solo números.';
-				errorEl.style.display = 'block';
-				cedulaEl.focus();
-				return;
-			}
-
-			validateBtn.disabled = true;
-			loadingEl.style.display = 'block';
-
-			try {
-				console.log('📤 Enviando validación al webhook...');
-				
-				const response = await fetch(CONFIG.webhookClient, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ 
-						cedula: cedula,
-						mac: urlParams.mac,
-						ap: urlParams.ap,
-						ssid: urlParams.ssid
-					})
-				});
-
-				console.log('📥 Respuesta recibida:', response.status);
-				
-				let data;
-				try {
-					data = await response.json();
-					console.log('📊 Datos:', data);
-				} catch (e) {
-					console.warn('⚠️ Respuesta no es JSON válido');
-					data = { success: response.ok };
-				}
-
-				loadingEl.style.display = 'none';
-
-				if (data === true || data.success === true || data.valid === true) {
-					successEl.textContent = '¡Cliente validado correctamente! Conectando...';
-					successEl.style.display = 'block';
-					
-					// Autorizar en Omada
-					setTimeout(async () => {
-						const authorized = await authorizeOmada('client-' + cedula);
-						if (!authorized && urlParams.isFromOmada) {
-							errorEl.textContent = 'Error al conectar. Por favor contacte a soporte.';
-							errorEl.style.display = 'block';
-							successEl.style.display = 'none';
-							validateBtn.disabled = false;
-						}
-					}, 1500);
-				} else {
-					errorEl.textContent = 'No se encontró su registro en el sistema. Por favor verifique su número de cédula o contacte a soporte.';
-					errorEl.style.display = 'block';
-					validateBtn.disabled = false;
-				}
-			} catch (err) {
-				console.error('❌ Error completo:', err);
-				loadingEl.style.display = 'none';
-				
-				// Mensaje más específico según el error
-				let errorMessage = 'Error al conectar con el servidor. ';
-				if (err.message.includes('Failed to fetch')) {
-					errorMessage += 'Verifique su conexión a Internet o que el webhook esté accesible.';
-				} else {
-					errorMessage += 'Por favor intente nuevamente.';
-				}
-				
-				errorEl.textContent = errorMessage;
-				errorEl.style.display = 'block';
-				validateBtn.disabled = false;
-			}
-		}
-
-		// Función para no clientes
-		async function submitDataAndLogin() {
-			const nameEl = document.getElementById('name');
-			const phoneEl = document.getElementById('phone');
-			const emailEl = document.getElementById('email');
-			const interestEl = document.querySelector('input[name="interested"]:checked');
-			const submitBtn = document.getElementById('submitBtn');
-
-			if (!nameEl.value.trim()) {
+		// Manejar envío del formulario de invitados
+		function handleGuestSubmit() {
+			const name = document.getElementById('name').value.trim();
+			const phone = document.getElementById('phone').value.trim();
+			const email = document.getElementById('email').value.trim();
+			const interested = document.querySelector('input[name="interested"]:checked');
+			
+			if (!name) {
 				alert('Por favor ingrese su Nombre y Apellido.');
-				nameEl.focus();
-				return;
+				return false;
 			}
 			
-			const phone = phoneEl.value.trim();
-			if (!/^\d{7,15}$/.test(phone)) {
-				alert('Por favor ingrese un número de teléfono válido (7–15 dígitos).');
-				phoneEl.focus();
-				return;
+			if (!phone || !/^\d{7,15}$/.test(phone)) {
+				alert('Por favor ingrese un número de teléfono válido (7-15 dígitos).');
+				return false;
 			}
 			
-			if (!emailEl.value.trim()) {
-				alert('Por favor ingrese su Correo.');
-				emailEl.focus();
-				return;
+			if (!email) {
+				alert('Por favor ingrese su correo.');
+				return false;
 			}
 			
-			const email = emailEl.value.trim();
-			const genericEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!genericEmailPattern.test(email)) {
-				alert('Por favor ingrese un correo válido (ejemplo: usuario@dominio.com).');
-				emailEl.focus();
-				return;
-			}
-			
-			if (!interestEl) {
+			if (!interested) {
 				alert('Por favor seleccione si está interesado en adquirir nuestros servicios.');
-				return;
+				return false;
 			}
 
-			submitBtn.disabled = true;
-			submitBtn.textContent = 'Conectando...';
-
-			const person = {
-				name: nameEl.value.trim(),
-				phone: phoneEl.value.trim(),
-				email: emailEl.value.trim(),
-				interested: interestEl.value,
-				mac: urlParams.mac,
-				ap: urlParams.ap,
-				ssid: urlParams.ssid
-			};
-
-			try {
-				console.log('📤 Enviando datos de no cliente...');
-				await fetch(CONFIG.webhookNonClient, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(person)
-				});
-				console.log('✅ Datos enviados correctamente');
-			} catch (err) {
-				console.error('⚠️ Error al enviar datos al webhook:', err);
-			}
-
-			// Autorizar en Omada
-			const authorized = await authorizeOmada('guest-' + emailEl.value.trim());
-			if (!authorized && urlParams.isFromOmada) {
-				alert('Error al conectar. Por favor contacte a soporte.');
-				submitBtn.disabled = false;
-				submitBtn.textContent = 'Ingresar';
-			}
+			// Cambiar la acción del formulario al webhook
+			document.getElementById('nonClientFormElement').action = WEBHOOK_URL;
+			
+			// Esperar que se envíe el webhook y luego redirigir a Omada
+			setTimeout(function() {
+				if (omadaData.redirectUrl) {
+					window.location.href = omadaData.redirectUrl;
+				} else {
+					alert('✅ Datos enviados. Conectando...');
+				}
+			}, 1000);
+			
+			return true;
 		}
 
-		// Debug: mostrar parámetros en consola
-		console.log('🌐 Portal Servitel WiFi');
-		console.log('📋 Parámetros recibidos de Omada:', urlParams);
-		console.log('🔗 Webhooks configurados:', CONFIG);
+		// Inicializar
+		fillOmadaData();
 	</script>
 </body>
 

@@ -368,9 +368,9 @@
 
 	<script>
 		// Configuración
-		// Usamos un proxy CORS para evitar problemas de certificado
+		// IMPORTANTE: Reemplaza esta URL con la de tu Cloudflare Worker
+		const CLOUDFLARE_WORKER_URL = 'https://josenoguera758.telecom-monitoreo2.workers.dev';
 		const WEBHOOK_URL_ORIGINAL = 'https://n8n.telecom.com.ve/webhook-test/servitel-zona-wifi';
-		const WEBHOOK_URL = 'https://corsproxy.io/?' + encodeURIComponent(WEBHOOK_URL_ORIGINAL);
 
 		// Obtener parámetros de Omada desde la URL
 		const urlParams = new URLSearchParams(window.location.search);
@@ -411,46 +411,69 @@
 		}
 
 		// Manejar envío del formulario de clientes
-		function handleClientSubmit() {
+		async function handleClientSubmit() {
 			const cedula = document.getElementById('cedula').value.trim();
+			const validateBtn = document.querySelector('#clientFormElement button');
 			
 			if (!cedula || !/^\d+$/.test(cedula)) {
 				alert('Por favor ingrese un número de cédula válido (solo números).');
 				return false;
 			}
 
-			// PRIMERO: Redirigir a Omada para dar acceso
-			const authUrl = omadaData.redirectUrl;
-			
-			if (authUrl) {
-				// Construir URL con datos para enviar al webhook DESPUÉS
-				const webhookParams = new URLSearchParams({
+			// Deshabilitar botón y mostrar loading
+			validateBtn.disabled = true;
+			validateBtn.textContent = 'Validando...';
+
+			try {
+				// Construir URL para el Worker
+				const workerParams = new URLSearchParams({
 					cedula: cedula,
+					redirect_url: omadaData.redirectUrl,
 					mac: omadaData.mac,
 					ap: omadaData.ap,
-					ssid: omadaData.ssid,
-					type: 'client'
+					ssid: omadaData.ssid
 				});
+
+				const workerUrl = CLOUDFLARE_WORKER_URL + '?' + workerParams.toString();
 				
-				// Agregar parámetros al URL de autorización de Omada
-				const separator = authUrl.includes('?') ? '&' : '?';
-				const finalUrl = authUrl + separator + 'webhook=' + encodeURIComponent(WEBHOOK_URL_ORIGINAL + '?' + webhookParams.toString());
+				console.log('📤 Validando con Worker:', workerUrl);
+
+				// Hacer petición al Worker
+				const response = await fetch(workerUrl);
 				
-				console.log('✅ Autorizando y enviando datos...');
-				window.location.href = authUrl;
-			} else {
-				alert('⚠️ No se encontró URL de autorización de Omada');
+				console.log('📥 Respuesta:', response.status);
+
+				if (response.redirected) {
+					// El worker redirigió automáticamente
+					window.location.href = response.url;
+				} else if (response.ok) {
+					const data = await response.json();
+					if (data.redirect) {
+						window.location.href = data.redirect;
+					}
+				} else {
+					const error = await response.json();
+					alert('❌ ' + (error.error || 'Cliente no encontrado en el sistema'));
+					validateBtn.disabled = false;
+					validateBtn.textContent = 'Validar y Conectar';
+				}
+			} catch (error) {
+				console.error('❌ Error:', error);
+				alert('Error al validar. Por favor intente nuevamente.');
+				validateBtn.disabled = false;
+				validateBtn.textContent = 'Validar y Conectar';
 			}
 			
-			return false; // Prevenir envío del form
+			return false;
 		}
 
 		// Manejar envío del formulario de invitados
-		function handleGuestSubmit() {
+		async function handleGuestSubmit() {
 			const name = document.getElementById('name').value.trim();
 			const phone = document.getElementById('phone').value.trim();
 			const email = document.getElementById('email').value.trim();
 			const interested = document.querySelector('input[name="interested"]:checked');
+			const submitBtn = document.querySelector('#nonClientFormElement button');
 			
 			if (!name) {
 				alert('Por favor ingrese su Nombre y Apellido.');
@@ -472,12 +495,13 @@
 				return false;
 			}
 
-			// PRIMERO: Redirigir a Omada para dar acceso
-			const authUrl = omadaData.redirectUrl;
-			
-			if (authUrl) {
-				// Construir URL con datos
-				const webhookParams = new URLSearchParams({
+			// Deshabilitar botón
+			submitBtn.disabled = true;
+			submitBtn.textContent = 'Conectando...';
+
+			try {
+				// Enviar datos al webhook mediante el Worker
+				const guestParams = new URLSearchParams({
 					name: name,
 					phone: phone,
 					email: email,
@@ -485,16 +509,32 @@
 					mac: omadaData.mac,
 					ap: omadaData.ap,
 					ssid: omadaData.ssid,
-					type: 'guest'
+					type: 'guest',
+					redirect_url: omadaData.redirectUrl
 				});
+
+				const workerUrl = CLOUDFLARE_WORKER_URL + '?' + guestParams.toString();
 				
-				console.log('✅ Autorizando y enviando datos...');
-				window.location.href = authUrl;
-			} else {
-				alert('⚠️ No se encontró URL de autorización de Omada');
+				console.log('📤 Enviando datos de invitado...');
+
+				// Para invitados, siempre dar acceso
+				await fetch(workerUrl);
+				
+				// Redirigir a Omada
+				if (omadaData.redirectUrl) {
+					window.location.href = omadaData.redirectUrl;
+				} else {
+					alert('✅ Datos enviados. Conectando...');
+				}
+			} catch (error) {
+				console.error('⚠️ Error:', error);
+				// Dar acceso aunque falle el envío de datos
+				if (omadaData.redirectUrl) {
+					window.location.href = omadaData.redirectUrl;
+				}
 			}
 			
-			return false; // Prevenir envío del form
+			return false;
 		}
 
 		// Inicializar

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Login - Servitel WiFi</title>
+	<meta http-equiv="pragma" content="no-cache" />
+	<meta http-equiv="expires" content="-1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			background: linear-gradient(135deg, #00d4aa 0%, #00b8d4 50%, #0099cc 100%);
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+			padding: 20px;
+		}
+
+		.login-container {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 20px;
+			padding: 40px 30px;
+			max-width: 500px;
+			width: 100%;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+			animation: fadeInUp 0.6s ease-out;
+		}
+
+		@keyframes fadeInUp {
+			from {
+				opacity: 0;
+				transform: translateY(30px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		#ads {
+			text-align: center;
+			margin-bottom: 30px;
+			animation: fadeIn 0.8s ease-out 0.2s both;
+		}
+
+		#ads img {
+			max-width: 280px;
+			height: auto;
+			filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) drop-shadow(0 4px 12px rgba(0, 180, 212, 0.4));
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+
+		.welcome-text {
+			text-align: center;
+			color: #333;
+			font-size: 24px;
+			font-weight: 600;
+			margin-bottom: 30px;
+			animation: fadeIn 0.8s ease-out 0.3s both;
+		}
+
+		.client-selection {
+			text-align: center;
+			margin: 30px 0;
+			animation: fadeIn 0.8s ease-out 0.4s both;
+		}
+
+		.client-selection p {
+			color: #333;
+			font-size: 18px;
+			font-weight: 600;
+			margin-bottom: 20px;
+		}
+
+		.client-selection label {
+			display: inline-block;
+			margin: 0 10px;
+			padding: 12px 24px;
+			background: white;
+			border: 2px solid #00b8d4;
+			border-radius: 30px;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			font-size: 16px;
+			color: #333;
+		}
+
+		.client-selection label:hover {
+			background: linear-gradient(135deg, #00d4aa 0%, #00b8d4 100%);
+			color: white;
+			border-color: #00d4aa;
+			transform: translateY(-2px);
+			box-shadow: 0 5px 15px rgba(0, 180, 212, 0.3);
+		}
+
+		.client-selection input[type="radio"] {
+			margin-right: 8px;
+		}
+
+		.client-selection label:has(input:checked) {
+			background: linear-gradient(135deg, #00d4aa 0%, #00b8d4 100%);
+			color: white;
+			border-color: #00d4aa;
+			box-shadow: 0 5px 15px rgba(0, 180, 212, 0.4);
+		}
+
+		.form-section {
+			display: none;
+			animation: slideIn 0.4s ease-out;
+		}
+
+		.form-section.active {
+			display: block;
+		}
+
+		@keyframes slideIn {
+			from {
+				opacity: 0;
+				transform: translateX(-20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateX(0);
+			}
+		}
+
+		.form-section p b {
+			color: #333;
+			font-size: 20px;
+			display: block;
+			text-align: center;
+			margin-bottom: 20px;
+		}
+
+		label {
+			display: block;
+			color: #555;
+			font-weight: 500;
+			margin-bottom: 8px;
+			margin-top: 15px;
+			font-size: 14px;
+		}
+
+		input[type="text"],
+		input[type="email"] {
+			width: 100%;
+			padding: 12px 15px;
+			border: 2px solid #e0e0e0;
+			border-radius: 8px;
+			font-size: 16px;
+			transition: all 0.3s ease;
+			background: white;
+		}
+
+		input[type="text"]:focus,
+		input[type="email"]:focus {
+			outline: none;
+			border-color: #00b8d4;
+			box-shadow: 0 0 0 3px rgba(0, 184, 212, 0.1);
+			transform: translateY(-1px);
+		}
+
+		.survey-question {
+			text-align: center;
+			margin: 25px 0;
+			padding: 20px;
+			background: #f8f9fa;
+			border-radius: 12px;
+		}
+
+		.survey-question p {
+			color: #333;
+			font-weight: 500;
+			margin-bottom: 15px;
+		}
+
+		.survey-question label {
+			display: inline-block;
+			margin: 0 15px;
+			cursor: pointer;
+			transition: transform 0.2s ease;
+		}
+
+		.survey-question label:hover {
+			transform: scale(1.05);
+		}
+
+		.validate-btn, .submit-btn {
+			background: linear-gradient(135deg, #00d4aa 0%, #00b8d4 100%);
+			color: white;
+			padding: 14px 40px;
+			border: none;
+			border-radius: 30px;
+			cursor: pointer;
+			font-size: 18px;
+			font-weight: 600;
+			transition: all 0.3s ease;
+			box-shadow: 0 4px 15px rgba(0, 180, 212, 0.3);
+			display: inline-block;
+		}
+
+		.validate-btn:hover, .submit-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0, 180, 212, 0.4);
+			background: linear-gradient(135deg, #00e0bb 0%, #00c4e0 100%);
+		}
+
+		.validate-btn:active, .submit-btn:active {
+			transform: translateY(0);
+		}
+
+		.validate-btn:disabled, .submit-btn:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		.loading {
+			display: none;
+			text-align: center;
+			margin: 20px 0;
+			color: #00b8d4;
+			font-weight: 500;
+		}
+
+		.spinner {
+			display: inline-block;
+			width: 40px;
+			height: 40px;
+			border: 4px solid rgba(0, 184, 212, 0.2);
+			border-top-color: #00b8d4;
+			border-radius: 50%;
+			animation: spin 0.8s linear infinite;
+			margin-bottom: 10px;
+		}
+
+		@keyframes spin {
+			0% {
+				transform: rotate(0deg);
+			}
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		.error-message {
+			color: #ff4757;
+			background: #ffe5e8;
+			text-align: center;
+			margin: 15px 0;
+			padding: 12px;
+			border-radius: 8px;
+			display: none;
+			animation: shake 0.5s ease;
+			border-left: 4px solid #ff4757;
+		}
+
+		@keyframes shake {
+			0%, 100% { transform: translateX(0); }
+			25% { transform: translateX(-10px); }
+			75% { transform: translateX(10px); }
+		}
+
+		.success-message {
+			color: #00d4aa;
+			background: #e6fff9;
+			text-align: center;
+			margin: 15px 0;
+			padding: 12px;
+			border-radius: 8px;
+			display: none;
+			animation: successPop 0.5s ease;
+			border-left: 4px solid #00d4aa;
+		}
+
+		@keyframes successPop {
+			0% {
+				opacity: 0;
+				transform: scale(0.8);
+			}
+			50% {
+				transform: scale(1.05);
+			}
+			100% {
+				opacity: 1;
+				transform: scale(1);
+			}
+		}
+
+		.footer-text {
+			margin-top: 30px;
+			animation: fadeIn 1s ease-out 0.6s both;
+		}
+
+		.footer-text p {
+			margin: 8px 0;
+			color: #666;
+			font-size: 14px;
+			text-align: center;
+		}
+
+		.footer-text .top-link {
+			color: #00b8d4;
+			font-weight: 600;
+		}
+
+		.footer-text .company {
+			color: #999;
+			font-size: 12px;
+			margin-top: 15px;
+		}
+
+		/* Responsive */
+		@media (max-width: 600px) {
+			.login-container {
+				padding: 30px 20px;
+			}
+
+			.client-selection label {
+				display: block;
+				margin: 10px 0;
+			}
+
+			.welcome-text {
+				font-size: 20px;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div class="login-container">
+		<div id="ads">
+			<img src="ads.png" alt="Servitel Logo" />
+		</div>
+
+		<p class="welcome-text">Bienvenido a la Zona WiFi de Servitel</p>
+
+		<!-- Selección de tipo de usuario -->
+		<div class="client-selection">
+			<p>¿Eres cliente de Servitel?</p>
+			<label>
+				<input type="radio" name="clientType" value="client" onchange="showClientForm()">
+				<span>Sí, soy cliente</span>
+			</label>
+			<label>
+				<input type="radio" name="clientType" value="noClient" onchange="showNonClientForm()">
+				<span>No soy cliente</span>
+			</label>
+		</div>
+
+		<!-- Formulario para CLIENTES -->
+		<div id="clientForm" class="form-section">
+			<p><b>Validación de Cliente</b></p>
+			
+			<label for="cedula">Número de Cédula</label>
+			<input type="text" id="cedula" name="cedula" placeholder="Ejemplo: 12345678">
+
+			<div class="loading" id="loadingClient">
+				<div class="spinner"></div>
+				<div>Validando información...</div>
+			</div>
+
+			<div class="error-message" id="errorClient"></div>
+			<div class="success-message" id="successClient"></div>
+
+			<p style="text-align:center; margin-top:25px;">
+				<button type="button" class="validate-btn" id="validateBtn" onclick="validateClient()">
+					Validar
+				</button>
+			</p>
+		</div>
+
+		<!-- Formulario para NO CLIENTES -->
+		<div id="nonClientForm" class="form-section">
+			<p><b>Realiza esta encuesta rápida y navega GRATIS</b></p>
+
+			<label for="name">Nombre y Apellido</label>
+			<input type="text" id="name" name="name">
+
+			<label for="phone">Teléfono</label>
+			<input type="text" id="phone" name="phone">
+
+			<label for="email">Correo</label>
+			<input type="email" id="email" name="email">
+
+			<div class="survey-question">
+				<p>¿Estaría interesado en adquirir nuestros servicios?</p>
+				<label>
+					<input type="radio" name="interested" value="Si"> Sí
+				</label>
+				<label>
+					<input type="radio" name="interested" value="No"> No
+				</label>
+			</div>
+
+			<p style="text-align:center; margin-top:10px;">
+				<button type="button" class="submit-btn" id="submitBtn" onclick="submitDataAndLogin()">
+					Ingresar
+				</button>
+			</p>
+		</div>
+
+		<div class="footer-text">
+			<p class="top-link"><b>www.servitel.net.ve</b></p>
+			<p class="top-link"><b>@servitel.ve</b></p>
+			<p class="top-link"><b>@servitelsport</b></p>
+			<p class="company">
+				<small>
+					Conetcom Telecomunicaciones S.A.<br>
+					Rif: J30922497-2
+				</small>
+			</p>
+		</div>
+	</div>
+
+	<script>
+		// Configuración
+		const CONFIG = {
+			webhookNonClient: 'https://test.com',
+			webhookClient: 'https://n8n.telecom.com.ve/webhook/servitel-zona-wifi',
+			omadaAuthUrl: 'YOUR_OMADA_CONTROLLER_URL/guest/authorize' // Ajustar según tu instalación
+		};
+
+		// Obtener parámetros de la URL (pasados por Omada)
+		function getUrlParams() {
+			const params = new URLSearchParams(window.location.search);
+			return {
+				mac: params.get('client_mac') || params.get('mac') || '',
+				ap: params.get('ap_mac') || params.get('ap') || '',
+				ssid: params.get('ssid') || '',
+				url: params.get('url') || params.get('redirect_url') || '',
+				token: params.get('token') || ''
+			};
+		}
+
+		const urlParams = getUrlParams();
+
+		// Mostrar formulario de clientes
+		function showClientForm() {
+			document.getElementById('clientForm').classList.add('active');
+			document.getElementById('nonClientForm').classList.remove('active');
+			document.getElementById('errorClient').style.display = 'none';
+			document.getElementById('successClient').style.display = 'none';
+		}
+
+		// Mostrar formulario de no clientes
+		function showNonClientForm() {
+			document.getElementById('nonClientForm').classList.add('active');
+			document.getElementById('clientForm').classList.remove('active');
+		}
+
+		// Autorizar en Omada
+		async function authorizeOmada(username) {
+			try {
+				// Método 1: POST directo al controlador Omada
+				const authData = {
+					username: username,
+					mac: urlParams.mac,
+					ap: urlParams.ap,
+					ssid: urlParams.ssid,
+					token: urlParams.token
+				};
+
+				// Si tienes la URL de autorización del controlador
+				if (CONFIG.omadaAuthUrl && CONFIG.omadaAuthUrl !== 'YOUR_OMADA_CONTROLLER_URL/guest/authorize') {
+					const response = await fetch(CONFIG.omadaAuthUrl, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(authData)
+					});
+
+					if (response.ok) {
+						return true;
+					}
+				}
+
+				// Método 2: Redirección simple (funciona en la mayoría de casos)
+				// Omada generalmente acepta la autorización mediante callback URL
+				if (urlParams.url) {
+					window.location.href = urlParams.url;
+					return true;
+				}
+
+				return false;
+			} catch (error) {
+				console.error('Error al autorizar en Omada:', error);
+				return false;
+			}
+		}
+
+		// Validar cliente por cédula
+		async function validateClient() {
+			const cedulaEl = document.getElementById('cedula');
+			const loadingEl = document.getElementById('loadingClient');
+			const errorEl = document.getElementById('errorClient');
+			const successEl = document.getElementById('successClient');
+			const validateBtn = document.getElementById('validateBtn');
+
+			errorEl.style.display = 'none';
+			successEl.style.display = 'none';
+
+			const cedula = cedulaEl.value.trim();
+			if (!cedula) {
+				errorEl.textContent = 'Por favor ingrese su número de cédula.';
+				errorEl.style.display = 'block';
+				cedulaEl.focus();
+				return;
+			}
+
+			if (!/^\d+$/.test(cedula)) {
+				errorEl.textContent = 'La cédula debe contener solo números.';
+				errorEl.style.display = 'block';
+				cedulaEl.focus();
+				return;
+			}
+
+			validateBtn.disabled = true;
+			loadingEl.style.display = 'block';
+
+			try {
+				const response = await fetch(CONFIG.webhookClient, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ 
+						cedula: cedula,
+						mac: urlParams.mac,
+						ap: urlParams.ap,
+						ssid: urlParams.ssid
+					})
+				});
+
+				const data = await response.json();
+				loadingEl.style.display = 'none';
+
+				if (data === true || data.success === true || data.valid === true) {
+					successEl.textContent = '¡Cliente validado correctamente! Conectando...';
+					successEl.style.display = 'block';
+					
+					// Autorizar en Omada
+					setTimeout(async () => {
+						const authorized = await authorizeOmada('client-' + cedula);
+						if (!authorized) {
+							// Fallback: intentar redirección directa
+							if (urlParams.url) {
+								window.location.href = urlParams.url;
+							} else {
+								errorEl.textContent = 'Error al conectar. Por favor contacte a soporte.';
+								errorEl.style.display = 'block';
+								successEl.style.display = 'none';
+								validateBtn.disabled = false;
+							}
+						}
+					}, 1500);
+				} else {
+					errorEl.textContent = 'No se encontró su registro en el sistema. Por favor verifique su número de cédula o contacte a soporte.';
+					errorEl.style.display = 'block';
+					validateBtn.disabled = false;
+				}
+			} catch (err) {
+				console.error('Error al validar cliente:', err);
+				loadingEl.style.display = 'none';
+				errorEl.textContent = 'Error al conectar con el servidor. Por favor intente nuevamente.';
+				errorEl.style.display = 'block';
+				validateBtn.disabled = false;
+			}
+		}
+
+		// Función para no clientes
+		async function submitDataAndLogin() {
+			const nameEl = document.getElementById('name');
+			const phoneEl = document.getElementById('phone');
+			const emailEl = document.getElementById('email');
+			const interestEl = document.querySelector('input[name="interested"]:checked');
+			const submitBtn = document.getElementById('submitBtn');
+
+			if (!nameEl.value.trim()) {
+				alert('Por favor ingrese su Nombre y Apellido.');
+				nameEl.focus();
+				return;
+			}
+			
+			const phone = phoneEl.value.trim();
+			if (!/^\d{7,15}$/.test(phone)) {
+				alert('Por favor ingrese un número de teléfono válido (7–15 dígitos).');
+				phoneEl.focus();
+				return;
+			}
+			
+			if (!emailEl.value.trim()) {
+				alert('Por favor ingrese su Correo.');
+				emailEl.focus();
+				return;
+			}
+			
+			const email = emailEl.value.trim();
+			const genericEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!genericEmailPattern.test(email)) {
+				alert('Por favor ingrese un correo válido (ejemplo: usuario@dominio.com).');
+				emailEl.focus();
+				return;
+			}
+			
+			if (!interestEl) {
+				alert('Por favor seleccione si está interesado en adquirir nuestros servicios.');
+				return;
+			}
+
+			submitBtn.disabled = true;
+			submitBtn.textContent = 'Conectando...';
+
+			const person = {
+				name: nameEl.value.trim(),
+				phone: phoneEl.value.trim(),
+				email: emailEl.value.trim(),
+				interested: interestEl.value,
+				mac: urlParams.mac,
+				ap: urlParams.ap,
+				ssid: urlParams.ssid
+			};
+
+			try {
+				await fetch(CONFIG.webhookNonClient, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(person)
+				});
+			} catch (err) {
+				console.error('Error al enviar datos al webhook:', err);
+			}
+
+			// Autorizar en Omada
+			const authorized = await authorizeOmada('guest-' + emailEl.value.trim());
+			if (!authorized) {
+				// Fallback: intentar redirección directa
+				if (urlParams.url) {
+					window.location.href = urlParams.url;
+				} else {
+					alert('Error al conectar. Por favor contacte a soporte.');
+					submitBtn.disabled = false;
+					submitBtn.textContent = 'Ingresar';
+				}
+			}
+		}
+
+		// Debug: mostrar parámetros en consola
+		console.log('Parámetros recibidos de Omada:', urlParams);
+	</script>
+</body>
+
+</html>
